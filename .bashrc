@@ -6,6 +6,11 @@ if [ -f /etc/profile ]; then
 	. /etc/profile
 fi
 
+# Source Bahs completion scripts
+if [ -f /etc/bash_completion.d/git-completion.bash ]; then
+	. /etc/bash_completion.d/git-completion.bash
+fi
+
 # Set Vi as default text editing mode
 set -o vi
 
@@ -19,6 +24,15 @@ export MANPAGER="/usr/bin/most -s"
 if [[ -d ~/.bin ]]; then
 	export PATH=${PATH}:~/.bin
 fi
+
+# Enable EGSnrc environment
+#export EGS_CONFIG=/home/ljubak/HEN_HOUSE/specs/i686-pc-linux-gnu.conf
+#export EGS_HOME=/home/ljubak/egsnrc_mp/
+#export LD_LIBRARY_PATH=/home/ljubak/HEN_HOUSE/egs++/dso/linux32:$LD_LIBRARY_PATH
+#. /home/ljubak/HEN_HOUSE/scripts/egsnrc_bashrc_additions
+export EGS_HOME=/home/ljubak/EGSnrc/egs_home/
+export EGS_CONFIG=/home/ljubak/EGSnrc/HEN_HOUSE/specs/linux.conf
+source /home/ljubak/EGSnrc/HEN_HOUSE/scripts/egsnrc_bashrc_additions
 
 # User specific aliases
 alias cls='clear'
@@ -35,17 +49,18 @@ alias rsyncv='rsync -avu --progress'
 alias mvv='mv -v'
 alias dfh='df -Th'
 alias duh='du -hsc'
-alias btut='vim -R /home/share/Linux/documentation/General/+\ Aliens\ Bash\ Tutorial.txt'
-alias mntlja='sudo mount -o loop /home/share/Linux/documentation/Magazines/Linux\ Journal/Linux\ Journal\ Archive\ \[1994-2010\].iso /media/cdrom0'
-alias umntlja='sudo umount /media/cdrom0'
 alias dosbox='pushd /home/share/Archive/Software/DosboxMount/; dosbox -conf ./config &> /dev/null &'
-alias gtpbip='echo -e "Public IP Address is:" $(wget -q -O - checkip.dyndns.org | egrep -i -o "[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}")'
-alias pictodvi='xrandr --output DVI-I-1 --mode 1920x1080'
-alias pictohdmi='xrandr --output HDMI-1 --mode 1360x768'
+alias vivaldi='/usr/local/bin/vivaldi --disable-gpu %U'
+alias getpublicip='echo -e "Public IP Address is:" $(wget -q -O - checkip.dyndns.org | egrep -i -o "[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}")'
 alias profilemyapp='G_DEBUG=gc-friendly G_SLICE=always-malloc valgrind --tool=memcheck --leak-check=full'
 alias startxs='startx -- -nolisten tcp'
 alias reload_conky='killall -SIGUSR1 conky'
 alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=lat | head -n43'
+alias cqlock2='cqlock -s mid-high'
+alias chckgdrive='rclone check "GoogleDrive:/TagSpaces" "/home/ljubak/Dropbox/TagSpaces" -v'
+alias chcktagspaces='rclone check "/home/ljubak/Dropbox/TagSpaces" "GoogleDrive:/TagSpaces" -v'
+alias syncgdrive='rclone sync "GoogleDrive:/TagSpaces" "/home/ljubak/Dropbox/TagSpaces" -v -u'
+alias synctagspaces='rclone sync "/home/ljubak/Dropbox/TagSpaces" "GoogleDrive:/TagSpaces" -v -u'
 
 # Aliases for internet radiostations
 #alias smthjzz='vlc http://uk1.smoothandjazz.com:8090 > /dev/null 2>&1 &'
@@ -55,6 +70,11 @@ alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.fa
 # Unused aliases
 #alias skype='export LIBV4LCONTROL_FLAGS=1 && LD_PRELOAD=/usr/lib/\
 #	i386-linux-gnu/libv4l/v4l1compat.so /usr/bin/skype'
+#alias btut='vim -R /home/share/Linux/documentation/General/+\ Aliens\ Bash\ Tutorial.txt'
+#alias mntlja='sudo mount -o loop /home/share/Linux/documentation/Magazines/Linux\ Journal/Linux\ Journal\ Archive\ \[1994-2010\].iso /media/cdrom0'
+#alias umntlja='sudo umount /media/cdrom0'
+#alias pictodvi='xrandr --output DVI-I-1 --mode 1920x1080'
+#alias pictohdmi='xrandr --output HDMI-1 --mode 1360x768'
 
 
 # User specific functions
@@ -115,7 +135,7 @@ function netinfo() {
 }
 
 function bashinfo() {
-	# Prints information about systems bash shell to stdout
+	# Prints information about systems export HEN_HOUSE="" EGS_HOME="" EGS_CONFIG=""bash shell to stdout
 	fstline=0
 	bash --version | while read line; do
 		if [[ 0 -eq $fstline ]]; then
@@ -226,7 +246,8 @@ function prnals() {
 			cut -d"-" -f1)
 		value=$(echo -e "$line" | cut -d" " -f2- | sed 's/=/-/' | \
 			cut -d"-" -f2-)
-		echo -e "\e[0;31m$name\e[0m\t$value"
+		#echo -e "\e[0;31m$name\e[0m\t\t$value"
+		printf "\e[0;31m%15s\e[0m\t%s\n" "$name" "$value"
 		unset name
 		unset value
 	done
@@ -243,6 +264,11 @@ function readpdf() {
 	fi
 }
 
+function killbyname() {
+	# Kill proces by app name
+	ps -C "$1" | tail -n 1 | tr -s " " | cut -d " " -f 1 | xargs kill -9
+}
+
 #function alsa_skype() {
 #	# Runs skype using apulse platform
 #	devno=`cat /proc/asound/cards | egrep -i "USB-Audio" | cut -d" " -f2`
@@ -252,3 +278,4 @@ function readpdf() {
 
 # Print welcome message
 welcome
+
