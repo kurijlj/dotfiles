@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Ljubomir Kurij <kurijlj@gmail.com>
-" Last Change:	2010 Sep 28
+" Last Change:	2018 Jul 07
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -9,6 +9,6 @@ if exists("did_load_filetypes")
 endif
 
 augroup filetypedetect
-	au! BufRead,BufNewFile *.notes		setfiletype notes
-	au! BufRead,BufNewFile *.pcl		setfiletype pythoncodelog
+	au! BufRead,BufNewFile .conkyrc		setfiletype conkyrc
+	au! BufRead,BufNewFile *.mortran	setfiletype mortran
 augroup END
