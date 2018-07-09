@@ -11,7 +11,7 @@ endif
 " A bunch of useful Mortran keywords
 syn keyword	mortranCallStatement	call
 syn keyword	mortranStatement	REPLACE WITH OUTPUT CALL STOP END SUBROUTINE RETURN
-syn keyword	mortranType		COMIN
+syn keyword	mortranType		COMIN COMMON
 syn match       mortranImplicitNone     "$IMPLICIT-NONE"
 syn match       mortranIntegerType      "$INTEGER"
 syn match       mortranRealType         "$REAL"
@@ -20,6 +20,7 @@ syn keyword	mortranType		CHARACTER
 syn keyword	mortranConditional	IF ELSE ELSEIF
 syn keyword	mortranRepeat		WHILE FOR DO
 
+syn match mortranOperator   "+\|\-\|\*\|\/\|=\|(\|)\|\[\|\]\|,\|;\|<\|>\|{\|}"
 syn match mortranComment    "\".*\""
 syn match mortranLabel      ":.*:"
 syn match mortranString     "'.\{-}'"
@@ -47,6 +48,7 @@ syn match mortranFormatSpec	display	"\<I\d\+\>"
 hi def link mortranComment	    Comment
 hi def link mortranLabel	    Todo
 hi def link mortranString           String
+hi def link mortranOperator         Operator
 hi def link mortranNumber           Number
 hi def link mortranFloat            Float
 hi def link mortranFloatNoDec       mortranFloat
@@ -54,7 +56,10 @@ hi def link mortranFloatIniDec      mortranFloat
 hi def link mortranFloatEndDec      mortranFloat
 hi def link mortranFloatDExp        mortranFloat
 hi def link mortranFormatSpec       Identifier
-hi def link mortranKeyword	    Keyword
+"hi def link mortranKeyword	    Todo        pink
+"hi def link mortranKeyword	    Keyword     green
+"hi def link mortranKeyword	    Include     red
+hi def link mortranKeyword	    Function
 hi def link mortranCallStatement    mortranKeyword
 hi def link mortranStatement	    mortranKeyword
 hi def link mortranType		    Type
