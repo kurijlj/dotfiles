@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Mortran3
-" Last Change:	2018 July 8
+" Last Change:	2018 July 10
+" Version:      1.0
 " Maintainer:	Ljubomir Kurij (kurijlj AT gmail.com)
+
 
 if exists("b:current_syntax")
   finish
@@ -44,6 +46,13 @@ syn match mortranFloat	display	"\<\d\+\.\d\+\(e[-+]\=\d\+\)\=\(_\a\w*\)\=\>"
 syn match mortranFormatSpec	display	"\<F\d\+\.\d\+\>"
 syn match mortranFormatSpec	display	"\<T\d\+\>"
 syn match mortranFormatSpec	display	"\<I\d\+\>"
+syn match mortranControlCards   display "^%.\d\{0,2}"
+syn match mortranFFDirectives   display "^\!.\+\;"
+
+
+" EGSnrc code specific keywords and variables
+syn keyword egsnrcKeyword  HATCH SHOWER AUSGAB HOWFAR HOWNEAR ECUT PCUT
+
 
 hi def link mortranComment	    Comment
 hi def link mortranLabel	    Todo
@@ -56,9 +65,8 @@ hi def link mortranFloatIniDec      mortranFloat
 hi def link mortranFloatEndDec      mortranFloat
 hi def link mortranFloatDExp        mortranFloat
 hi def link mortranFormatSpec       Identifier
-"hi def link mortranKeyword	    Todo        pink
-"hi def link mortranKeyword	    Keyword     green
-"hi def link mortranKeyword	    Include     red
+hi def link mortranFFDirectives	    Keyword
+hi def link mortranControlCards	    Include
 hi def link mortranKeyword	    Function
 hi def link mortranCallStatement    mortranKeyword
 hi def link mortranStatement	    mortranKeyword
@@ -69,3 +77,6 @@ hi def link mortranRealType         mortranType
 hi def link mortranStringType       mortranType
 hi def link mortranConditional	    mortranKeyword
 hi def link mortranRepeat	    mortranKeyword
+
+
+hi def link egsnrcKeyword          Todo
