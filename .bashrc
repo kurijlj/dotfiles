@@ -15,7 +15,20 @@ fi
 set -o vi
 
 # Give some color to prompt
-PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]\$\[\e[0m\] '
+#PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]\$\[\e[0m\] '
+
+# Enable Bash Git Prompt
+#GIT_PROMPT_ONLY_IN_REPO=1
+#source ~/.bash-git-prompt/gitprompt.sh
+
+# Enable bash-powerline
+function _update_ps1() {
+    PS1="$(powerline-shell $?)"
+}
+
+if [ "$TERM" != "linux" ]; then
+    PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
+fi
 
 # Give some color to manpages
 export MANPAGER="/usr/bin/most -s"
@@ -26,20 +39,19 @@ if [[ -d ~/.bin ]]; then
 fi
 
 # Enable EGSnrc environment
-#export EGS_CONFIG=/home/ljubak/HEN_HOUSE/specs/i686-pc-linux-gnu.conf
-#export EGS_HOME=/home/ljubak/egsnrc_mp/
 #export LD_LIBRARY_PATH=/home/ljubak/HEN_HOUSE/egs++/dso/linux32:$LD_LIBRARY_PATH
-#. /home/ljubak/HEN_HOUSE/scripts/egsnrc_bashrc_additions
 export EGS_HOME=/home/ljubak/EGSnrc/egs_home/
-export EGS_CONFIG=/home/ljubak/EGSnrc/HEN_HOUSE/specs/linux.conf
+export EGS_CONFIG=/home/ljubak/EGSnrc/HEN_HOUSE/specs/corsair.conf
 source /home/ljubak/EGSnrc/HEN_HOUSE/scripts/egsnrc_bashrc_additions
 
 # User specific aliases
 alias cls='clear'
 alias clsa='cls;lsa'
 alias g16pass='tr -dc a-z0-9A-Z:_! < /dev/urandom | fold -w16 | head -1'
-alias ls='ls -A1Fh --color --group-directories-first'
-alias lsa='ls -Alh --color --group-directories-first'
+alias ls='ls -1AFh --color --group-directories-first'
+alias lst='ls -t'
+alias lsa='ls -AFhl --author --color --group-directories-first'
+alias lsta='lsa -t'
 alias rmv='rm -vi'
 alias rdir='rm -dr'
 alias rm~='find -P . -type f -name "*~" -exec rm -vi '"'"'{}'"'"' \;'
@@ -57,8 +69,8 @@ alias startxs='startx -- -nolisten tcp'
 alias reload_conky='killall -SIGUSR1 conky'
 alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=lat | head -n43'
 alias cqlock2='cqlock -s mid-high'
-alias chckgdrive='rclone check "GoogleDrive:/TagSpaces" "/home/ljubak/Dropbox/TagSpaces" -v'
-alias chcktagspaces='rclone check "/home/ljubak/Dropbox/TagSpaces" "GoogleDrive:/TagSpaces" -v'
+alias checkgdrive='rclone check "GoogleDrive:/TagSpaces" "/home/ljubak/Dropbox/TagSpaces" -v 2>&1 | egrep --color "File not in"'
+alias checktagspaces='rclone check "/home/ljubak/Dropbox/TagSpaces" "GoogleDrive:/TagSpaces" -v 2>&1 | egrep --color "File not in"'
 alias syncgdrive='rclone sync "GoogleDrive:/TagSpaces" "/home/ljubak/Dropbox/TagSpaces" -v -u'
 alias synctagspaces='rclone sync "/home/ljubak/Dropbox/TagSpaces" "GoogleDrive:/TagSpaces" -v -u'
 
