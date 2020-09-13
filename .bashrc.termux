@@ -76,7 +76,7 @@ function ifceinfo() {
 
 function netinfo() {
 	# Prints network configuration to stdout
-	ifcs=`/sbin/ifconfig -a -v | egrep -i "^[[:alnum:]]+:" | cut -d: -f1 | tr "\n\r" " "`
+	ifcs=`/sbin/ifconfig -a 2>/dev/null | cut -d" " -f1 | egrep -v "^$"`
 	echo -e ""
 	echo -e "\e[0;32m--------------- \e[0;31mNetwork Information \e[0;32m---------------\e[0m"
 	echo -e ""
@@ -116,7 +116,6 @@ function welcome() {
 	echo -e "Hello \e[0;36m$USER\e[0m today is" `date`
 	echo -e ""
 	echo -e "\e[0;32mLogged in:\e[0m"
-	who
 	netinfo
 	echo -e ""
 	unset bshspcr
