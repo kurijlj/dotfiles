@@ -76,7 +76,7 @@ function ifceinfo() {
 
 function netinfo() {
 	# Prints network configuration to stdout
-	ifcs=`/sbin/ifconfig -a 2>/dev/null | cut -d" " -f1 | egrep -v "^$"`
+	ifcs=`/sbin/ifconfig -a 2>/dev/null | cut -d" " -f1 | egrep -v "^$" | tr "\n\r" " "`
 	echo -e ""
 	echo -e "\e[0;32m--------------- \e[0;31mNetwork Information \e[0;32m---------------\e[0m"
 	echo -e ""
