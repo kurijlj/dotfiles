@@ -7,8 +7,28 @@ set -o vi
 # Give some color to prompt
 PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]\$\[\e[0m\] '
 
-# Give some color to manpages
-export MANPAGER="/usr/bin/most -s"
+# Launch SSH agent
+env=~/.ssh/agent.env
+
+agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
+
+agent_start () {
+    (umask 077; ssh-agent >| "$env")
+    . "$env" >| /dev/null ; }
+
+agent_load_env
+
+# agent_run_state: 0=agent running w/ key; 1=agent w/o key; 2= agent not running
+agent_run_state=$(ssh-add -l >| /dev/null 2>&1; echo $?)
+
+if [ ! "$SSH_AUTH_SOCK" ] || [ $agent_run_state = 2 ]; then
+    agent_start
+    ssh-add
+elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
+    ssh-add
+fi
+
+unset env
 
 # User specific aliases
 alias cls='clear'
@@ -22,16 +42,16 @@ alias rmv='rm -vi'
 alias rdir='rm -dr'
 alias rm~='find -P . -type f -name "*~" -exec rm -vi '"'"'{}'"'"' \;'
 alias cpv='cp -v'
-alias rsyncv='rsync -avu --progress'
 alias mvv='mv -v'
 alias dfh='df -Th'
 alias duh='du -hsc'
 alias getpublicip='echo -e "Public IP Address is:" $(wget -q -O - checkip.dyndns.org | egrep -i -o "[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}")'
+alias profilemyapp='G_DEBUG=gc-friendly G_SLICE=always-malloc valgrind --tool=memcheck --leak-check=full'
 alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=lat | head -n43'
 
 
 # User specific functions
-#==============================================================================
+
 function spin() {
 	# Animates spinner to stdout
 	if [[ $1 -ge 3 ]]; then
@@ -54,33 +74,13 @@ function spin() {
 	unset cnt
 }
 
-function ifceinfo() {
-	# Prints network interface configuration to stdout
-	ntaddr=`/sbin/ifconfig -a "$1" 2>/dev/null | egrep -i "inet "`
-	hwaddr=`/sbin/ifconfig -a "$1" 2>/dev/null | egrep -io "([[:alnum:]]{2}:){5}([[:alnum:]]{2})"`
-	inet=`egrep -io "inet ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
-	ntmask=`egrep -io "netmask ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
-	bcast=`egrep -io "broadcast ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
-	echo -e "\e[0;32m     Interface: \e[0;31m$1\e[0m"
-	echo -e "\e[0;32m          inet:\e[0m $inet"
-	echo -e "\e[0;32m       netmask:\e[0m $ntmask"
-	if [[ "$bcast" ]]; then echo -e "\e[0;32m     broadcast:\e[0m $bcast"; fi
-	if [[ "$hwaddr" ]]; then echo -e "\e[0;32m         ether:\e[0m $hwaddr"; fi
-	echo -e ""
-	unset bcast
-	unset ntmask
-	unset inet
-	unset hwaddr
-	unset netaddr
-}
-
 function netinfo() {
 	# Prints network configuration to stdout
-	ifcs=`/sbin/ifconfig -a 2>/dev/null | cut -d" " -f1 | egrep -v "^$" | tr "\n\r" " "`
 	echo -e ""
 	echo -e "\e[0;32m--------------- \e[0;31mNetwork Information \e[0;32m---------------\e[0m"
 	echo -e ""
-	for ifce in $ifcs; do ifceinfo "$ifce"; done
+	ipconfig
+	echo -e ""
 	echo -e "\e[0;32m---------------------------------------------------\e[0m"
 	echo -e ""
 	unset ifce
@@ -104,18 +104,23 @@ function bashinfo() {
 function welcome() {
 	# Prints welcome message
 	bshspcr="              "
+	gccspcr="               "
 	[[ `tty | egrep -i pts` ]] && clear
 	echo -e "                    \e[0;31m$HOSTNAME\e[0m"
+	echo -e ""
+	echo -e "\e[0;32m            System:\e[0;31m $OS\e[0m"
 	echo -e ""
 	echo -e "\e[0;32mKernel Information:\e[0;31m" `uname -smr` "\e[0m"
 	echo -e ""
 	bashinfo "$bshspcr"
-	echo -e ""
-	echo -e "Uptime for this computer is" `uptime`
 	echo -e "\n"
 	echo -e "Hello \e[0;36m$USER\e[0m today is" `date`
 	echo -e ""
+	echo -e "\e[0;32mLogged in:\e[0m \e[0;31m$USERNAME\e[0m"
+	netinfo
+	echo -e ""
 	unset bshspcr
+	unset gccspcr
 }
 
 function tosmlfns() {
@@ -164,13 +169,7 @@ function prnals() {
 	echo -e ""
 }
 
-function killbyname() {
-	# Kill proces by app name
-	ps -C "$1" | tail -n 1 | tr -s " " | cut -d " " -f 1 | xargs kill -9
-}
-
 
 # Print welcome message
-#==============================================================================
 welcome
 
