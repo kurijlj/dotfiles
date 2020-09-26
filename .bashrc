@@ -281,6 +281,22 @@ function killbyname() {
 	ps -C "$1" | tail -n 1 | tr -s " " | cut -d " " -f 1 | xargs kill -9
 }
 
+function uname_report() {
+	echo -e ""
+	echo -e "\e[0;31mSystem Information (uname):\e[0m"
+	echo -e "\e[0;36m====================================================\
+\e[0m"
+	echo -e "\e[0;32m         Machine:\e[0;31m" `uname -m` "\e[0m"
+	echo -e "\e[0;32m       Processor:\e[0;31m" `uname -p` "\e[0m"
+	echo -e "\e[0;32m        Platform:\e[0;31m" `uname -i` "\e[0m"
+	echo -e "\e[0;32m     Kernel Name:\e[0;31m" `uname -s` "\e[0m"
+	echo -e "\e[0;32m  Kernel Version:\e[0;31m" `uname -v` "\e[0m"
+	echo -e "\e[0;32m  Kernel Release:\e[0;31m" `uname -r` "\e[0m"
+	echo -e "\e[0;32mOperating System:\e[0;31m" `uname -o` "\e[0m"
+	echo -e "\e[0;32m        Hostname:\e[0;31m" `uname -n` "\e[0m"
+	echo -e ""
+}
+
 #function alsa_skype() {
 #	# Runs skype using apulse platform
 #	devno=`cat /proc/asound/cards | egrep -i "USB-Audio" | cut -d" " -f2`
