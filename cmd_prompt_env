@@ -1,0 +1,2 @@
+Variable name: PROMPT
+Variable value: $N:[%username%@%computername%]$+$g
