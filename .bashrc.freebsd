@@ -1,0 +1,61 @@
+# ~/.bashrc: This file contains user specific defaults used by all Bourne
+# (and related) shells when invoked as an interactive non-login shell.
+
+
+# Source ~/.bash_profile definitions
+if [ -f ~/.bash_profile ]; then
+  . ~/.bash_profile
+fi
+
+
+# Enable bash-powerline
+powerline_script=/usr/local/lib/python3.7/site-packages/powerline/bindings/bash/powerline.sh
+if [ "$TERM" == "xterm-256color" -a -f $powerline_script ]; then
+    powerline-daemon -q
+    POWERLINE_BASH_CONTINUATION=1
+    POWERLINE_BASH_SELECT=1
+    # PS1='$(__git_ps1 " %s")'
+    . $powerline_script
+fi
+
+
+# User specific aliases
+
+# Publications archive specific aliases
+if [ -d ~/Publications ]; then
+    alias taglist='/bin/ls ~/Publications/* | egrep -io "\[(.*?)\]" | egrep -io "[0-9]?[a-z]+[0-9]*" | sort | uniq | nl';
+else
+    echo -e "WARNING: Directory '~/Publications' does not exist.";
+fi
+
+# User specific functions
+
+function gvim() {
+    # Calls gvim with NERDTree and &> /dev/null
+    if [ -e /usr/local/bin/gvim ]; then
+        if [ -e $1 -a -f $1 ]; then
+            /usr/local/bin/gvim +NERDTree "$1" &> /dev/null
+        else
+            /usr/bin/gvim +NERDTree &> /dev/null
+        fi
+    else
+        echo -e "Can not find '/usr/local/bin/gvim'"
+    fi
+}
+
+function gvimr() {
+    # Calls gvim read only with NERDTree and &> /dev/null
+    if [ -e /usr/local/bin/gvim ]; then
+        if [ -e $1 -a -f $1 ]; then
+            /usr/local/bin/gvim -R +NERDTree "$1" &> /dev/null
+        else
+            echo "\"$1\" is not a file!"
+        fi
+    else
+        echo -e "Can not find '/usr/local/bin/gvim'"
+    fi
+}
+
+
+# Enable Starship prompt
+# eval "$(starship init bash)"

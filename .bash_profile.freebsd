@@ -1,0 +1,271 @@
+# ~/.bash_profile: This file contains user specific defaults used by all Bourne
+# (and related) shells when invoked as an interactive login shell, or as a
+# non-interactive shell with the --login option
+
+LANG=en_US.UTF-8; export LANG
+CHARSET=UTF-8; export CHARSET
+
+# Set length of bash history file
+HISTFILESIZE=2000
+
+# Source Bahs completion scripts
+if [ -f /usr/local/share/git-core/contrib/completion/git-completion.bash ]; then
+    . /usr/local/share/git-core/contrib/completion/git-completion.bash
+fi
+
+# Set Vi as default text editing mode
+set -o vi
+
+# Enable Bash Git Prompt
+GIT_PROMPT_ONLY_IN_REPO=1
+if [ -f /usr/local/share/git-core/contrib/completion/git-prompt.sh ]; then
+    . /usr/local/share/git-core/contrib/completion/git-prompt.sh
+fi
+
+# Give some color to prompt
+PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]$(__git_ps1 " [%s]")\$\[\e[0m\] '
+
+# Give some color to manpages
+export MANPAGER="/usr/local/bin/most -s"
+
+# Enable EGSnrc environment
+if [ -d /home/great_otter/Software/Src/EGSnrc ]; then
+    export EGS_HOME=/home/great_otter/Software/Src/EGSnrc/egs_home/
+    export EGS_CONFIG=/home/great_otter/Software/Src/EGSnrc/HEN_HOUSE/specs/freebsd.conf
+    . /home/great_otter/Software/Src/EGSnrc/HEN_HOUSE/scripts/egsnrc_bashrc_additions
+fi
+
+# Enable Geant4 environment
+if [ -d /home/great_otter/Software/Src/Geant4 ]; then
+    . /home/great_otter/Software/Src/Geant4/bin/geant4.sh
+fi
+
+# User specific aliases
+alias cls='clear'
+alias clsa='cls;lsa'
+# alias g16pass='tr -dc a-z0-9A-Z:_! < /dev/urandom | fold -w16 | head -1'
+alias ls='ls -1AFhl --color'
+alias lst='ls -t'
+alias lsa='ls -AFhl --color'
+alias lsta='lsa -t'
+alias rmv='rm -vi'
+alias rdir='rm -dr'
+alias rm~='find -P . -type f -name "*~" -exec rm -vi '"'"'{}'"'"' \;'
+alias rmexc='for file in ./*; do [[ -f "$file" ]] && [[ -x "$file" ]] || continue; rm -vi "$file"; done'
+alias cpv='cp -v'
+if [ -e /usr/local/bin/rsync ]; then
+    alias rsyncv='rsync -avu --progress'
+fi
+alias mvv='mv -v'
+alias dfh='df -Th'
+alias duh='du -hsc'
+if [ -e /usr/local/bin/wget ]; then
+    alias getpublicip='echo -e "Public IP Address is:" $(wget -q -O - checkip.dyndns.org | egrep -i -o "[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}")';
+else
+    echo -e "WARNING: Package 'wget' not installed.";
+fi
+if [ -e /usr/local/bin/lynx ]; then
+    alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=lat | head -n43';
+else
+    echo -e "WARNING: Package 'lynx' not installed.";
+fi
+if [ -e /usr/local/bin/freecolor ]; then
+    alias memory='freecolor -t -m';
+else
+    echo -e "WARNING: Package 'freecolor' not installed.";
+fi
+if [ -e /usr/local/bin/valgrind ]; then
+    alias profilemyapp='G_DEBUG=gc-friendly G_SLICE=always-malloc valgrind --tool=memcheck --leak-check=full';
+else
+    echo -e "WARNING: Package 'valgrind' not installed.";
+fi
+if [ -e /usr/local/bin/fuse-ext2 ]; then
+    alias mount_extfs='';
+else
+    echo -e "WARNING: Package 'fusefs-ext2' not installed.";
+fi
+if [ -e /usr/local/bin/ntfs-3g ]; then
+    alias mount_ntfs='';
+else
+    echo -e "WARNING: Package 'fusefs-ntfs' not installed.";
+fi
+
+
+# User specific functions
+
+function spin() {
+    # Animates spinner to stdout
+    if [[ $1 -ge 3 ]]; then
+        cnt="$1"
+    else
+        cnt=2
+    fi
+    for i in `seq 1 "$cnt"`; do
+        echo -ne "\e[0;31m-"
+        sleep .05
+        echo -ne "\b\\"
+        sleep .05
+        echo -ne "\b|"
+        sleep .05
+        echo -ne "\b/"
+        sleep .05
+        echo -ne "\b-\b\e[0m"
+    done
+    echo -ne ""
+    unset cnt
+}
+
+function ifceinfo() {
+    # Prints network interface configuration to stdout
+    ntaddr=`/sbin/ifconfig -v "$1" | egrep -i "inet "`
+    hwaddr=`/sbin/ifconfig -v "$1" | egrep -io "([[:alnum:]]{2}:){5}([[:alnum:]]{2})"`
+    inet=`egrep -io "inet ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
+    ntmask=`egrep -io "netmask ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
+    bcast=`egrep -io "broadcast ([[:digit:]]{1,3}\.){3}([[:digit:]]{1,3})" <<< "$ntaddr" | cut -d" " -f2`
+    echo -e "\e[0;32m     Interface: \e[0;31m$1\e[0m"
+    echo -e "\e[0;32m          inet:\e[0m $inet"
+    echo -e "\e[0;32m       netmask:\e[0m $ntmask"
+    if [[ "$bcast" ]]; then echo -e "\e[0;32m     broadcast:\e[0m $bcast"; fi
+    if [[ "$hwaddr" ]]; then echo -e "\e[0;32m         ether:\e[0m $hwaddr"; fi
+    echo -e ""
+    unset bcast
+    unset ntmask
+    unset inet
+    unset hwaddr
+    unset netaddr
+}
+
+function netinfo() {
+    # Prints network configuration to stdout
+    ifcs=`/sbin/ifconfig -a -v | egrep -i "^[[:alnum:]]+:" | cut -d: -f1 | tr "\n\r" " "`
+    echo -e ""
+    echo -e "\e[0;32m--------------- \e[0;31mNetwork Information \e[0;32m---------------\e[0m"
+    echo -e ""
+    for ifce in $ifcs; do ifceinfo "$ifce"; done
+    echo -e "\e[0;32m---------------------------------------------------\e[0m"
+    echo -e ""
+    unset ifce
+    unset ifcs
+}
+
+function bashinfo() {
+    # Prints information about bash shell to stdout
+    fstline=0
+    bash --version | while read line; do
+        if [[ 0 -eq $fstline ]]; then
+            fstline=1
+            echo -e "$1\e[0;32mBash: \e[0;31m$line\e[0m"
+        else
+            echo -e "$1      $line"
+        fi
+    done
+    unset fstline
+}
+
+function welcome() {
+    # Prints welcome message
+    bshspcr="              "
+    gccspcr="               "
+    [[ `tty | egrep -i pts` ]] && clear
+    echo -e "                    \e[0;31m"`uname -n`"\e[0m"
+    echo -e ""
+    echo -e "\e[0;32m            System:\e[0;31m" `uname -smr` "\e[0m"
+    echo -e ""
+    echo -e "\e[0;32mKernel Information:\e[0;31m" `uname -siK` "\e[0m"
+    echo -e ""
+    bashinfo "$bshspcr"
+    echo -e ""
+    echo -e "Uptime for this computer is" `uptime`
+    echo -e "\n"
+    echo -e "Hello \e[0;36m$USER\e[0m today is" `date`
+    echo -e ""
+    echo -e "\e[0;32mLogged in:\e[0m"
+    who
+    netinfo
+    echo -e ""
+    unset bshspcr
+    unset gccspcr
+}
+
+function tosmlfns() {
+    # To Small Filenames function
+    if [[ -n $1 ]] && [[ -f $1 ]]; then
+        srcdir=$(dirname "$1")
+        newname=$(basename "$1" | tr "[A-Z] " "[a-z]_")
+        mv -v "$1" "$srcdir/$newname"
+    else
+        echo "$1 is not a file!"
+    fi
+    unset srcdir
+    unset newname
+}
+
+function hyptounds() {
+    # Hyphens to Underscores function
+    if [[ -n $1 ]] && [[ -f $1 ]]; then
+        srcdir=$(dirname "$1")
+        newname=$(basename "$1" | tr "-" "_")
+        mv -v "$1" "$srcdir/$newname"
+    else
+        echo "$1 is not a file!"
+    fi
+    unset srcdir
+    unset newname
+}
+
+function prnals() {
+    # Prints list of user defined aliases to stdout
+    echo -e ""
+    echo -e "\e[0;31mAvailable aliases list:\e[0m"
+    echo -e "\e[0;36m====================================================\
+\e[0m"
+    cat ~/.bashrc | egrep -i "^alias [[:alpha:]]" | sort | while read line
+    do
+        name=$(echo -e "$line" | cut -d" " -f2- | sed 's/=/-/' | \
+            cut -d"-" -f1)
+        value=$(echo -e "$line" | cut -d" " -f2- | sed 's/=/-/' | \
+            cut -d"-" -f2-)
+        #echo -e "\e[0;31m$name\e[0m\t\t$value"
+        printf "\e[0;31m%15s\e[0m\t%s\n" "$name" "$value"
+        unset name
+        unset value
+    done
+    echo -e ""
+}
+
+function readpdf() {
+    # Used to run evince in background from command line and with
+    # &> /dev/null
+    if [[ -n $1 ]] && [[ -f $1 ]]; then
+        /usr/local/bin/evince "$1" &> /dev/null &
+    else
+        echo "\"$1\" is not a file!"
+    fi
+}
+
+function killbyname() {
+    # Kill proces by app name
+    ps -C "$1" | tail -n 1 | tr -s " " | cut -d " " -f 1 | xargs kill -9
+}
+
+function uname_report() {
+    echo -e ""
+    echo -e "\e[0;32m------------ \e[0;31mSystem Information (uname)\e[0;32m------------\e[0m"
+    echo -e ""
+    echo -e "\e[0;32m         Machine:\e[0;31m" `uname -m` "\e[0m"
+    echo -e "\e[0;32m       Processor:\e[0;31m" `uname -p` "\e[0m"
+    echo -e "\e[0;32m        Platform:\e[0;31m" `uname -i` "\e[0m"
+    echo -e "\e[0;32m     Kernel Name:\e[0;31m" `uname -s` "\e[0m"
+    echo -e "\e[0;32m  Kernel Version:\e[0;31m" `uname -v` "\e[0m"
+    echo -e "\e[0;32m  Kernel Release:\e[0;31m" `uname -r` "\e[0m"
+    echo -e "\e[0;32mOperating System:\e[0;31m" `uname -o` "\e[0m"
+    echo -e "\e[0;32m        Hostname:\e[0;31m" `uname -n` "\e[0m"
+    echo -e ""
+    echo -e "\e[0;32m---------------------------------------------------\e[0m"
+    echo -e ""
+}
+
+
+# Print welcome message
+welcome
+
