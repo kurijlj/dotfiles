@@ -5,7 +5,8 @@
 LANG=en_US.UTF-8; export LANG
 CHARSET=UTF-8; export CHARSET
 
-# Set length of bash history file
+# Set length of command history and bash history file
+HISTSIZE=2000
 HISTFILESIZE=2000
 
 # Source Bahs completion scripts
@@ -59,13 +60,14 @@ fi
 alias mvv='mv -v'
 alias dfh='df -Th'
 alias duh='du -hsc'
+alias mount_usb_stick='sudo mount_msdosfs -o longnames -g 0 -m 775 -L ca_ES.UTF-8'
 if [ -e /usr/local/bin/wget ]; then
     alias getpublicip='echo -e "Public IP Address is:" $(wget -q -O - checkip.dyndns.org | egrep -i -o "[0-9]{3}\.[0-9]{3}\.[0-9]{3}\.[0-9]{3}")';
 else
     echo -e "WARNING: Package 'wget' not installed.";
 fi
 if [ -e /usr/local/bin/lynx ]; then
-    alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=lat | head -n43';
+    alias nbs_exchange='lynx -dump http://www.nbs.rs/kursnaListaModul/srednjiKurs.faces?lang=eng | head -n41';
 else
     echo -e "WARNING: Package 'lynx' not installed.";
 fi
@@ -80,12 +82,12 @@ else
     echo -e "WARNING: Package 'valgrind' not installed.";
 fi
 if [ -e /usr/local/bin/fuse-ext2 ]; then
-    alias mount_extfs='';
+    alias mount_extfs='sudo fuse-ext2 -o ro,allow_other,gid=0,umask=002';
 else
     echo -e "WARNING: Package 'fusefs-ext2' not installed.";
 fi
 if [ -e /usr/local/bin/ntfs-3g ]; then
-    alias mount_ntfs='';
+    alias mount_ntfs='sudo ntfs-3g -o rw';
 else
     echo -e "WARNING: Package 'fusefs-ntfs' not installed.";
 fi

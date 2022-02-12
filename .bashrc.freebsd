@@ -19,19 +19,25 @@ if [ "$TERM" == "xterm-256color" -a -f $powerline_script ]; then
 fi
 
 
+# User specific variables
+export PUB_HOME="$HOME/Publications"
+
+
 # User specific aliases
 
 # Publications archive specific aliases
-if [ -d ~/Publications ]; then
-    alias taglist='/bin/ls ~/Publications/* | egrep -io "\[(.*?)\]" | egrep -io "[0-9]?[a-z]+[0-9]*" | sort | uniq | nl';
+if [ -d $PUB_HOME ]; then
+    alias pub_tlist='/usr/bin/find -P $PUB_HOME/* -type f -print | egrep -io "\[(.*?)\]" | egrep -io "[0-9]?[a-z]+[0-9]*" | sort | uniq | nl';
 else
-    echo -e "WARNING: Directory '~/Publications' does not exist.";
+    echo -e "WARNING: Directory '$PUB_HOME' does not exist.";
 fi
+
 
 # User specific functions
 
+# gVim editor
 function gvim() {
-    # Calls gvim with NERDTree and &> /dev/null
+    # Invoke gvim with NERDTree and &> /dev/null
     if [ -e /usr/local/bin/gvim ]; then
         if [ -e $1 -a -f $1 ]; then
             /usr/local/bin/gvim +NERDTree "$1" &> /dev/null
@@ -43,8 +49,9 @@ function gvim() {
     fi
 }
 
+# gVim viewer
 function gvimr() {
-    # Calls gvim read only with NERDTree and &> /dev/null
+    # Invoke gvim read only with NERDTree and &> /dev/null
     if [ -e /usr/local/bin/gvim ]; then
         if [ -e $1 -a -f $1 ]; then
             /usr/local/bin/gvim -R +NERDTree "$1" &> /dev/null
@@ -53,6 +60,13 @@ function gvimr() {
         fi
     else
         echo -e "Can not find '/usr/local/bin/gvim'"
+    fi
+}
+
+# Serach publications archive for the given keyword(s)
+function pub_search() {
+    if [ -d $PUB_HOME ]; then
+        /usr/bin/find -P $PUB_HOME/* -type f -print | egrep -i --color "$1"
     fi
 }
 
