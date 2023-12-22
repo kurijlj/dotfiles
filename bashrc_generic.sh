@@ -19,11 +19,4 @@ if [ -f ~/.bash_profile ]; then
   . ~/.bash_profile
 fi
 
-
-# User specific aliases
-
-
-# User specific functions
-
-
 # End of .bashrc

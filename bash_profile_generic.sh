@@ -28,14 +28,14 @@ alias lsa='ls -AFhl --color'
 alias lsta='lsa -t'
 alias rmv='rm -vi'
 alias rdir='rm -dr'
-alias rmexc='for file in ./*; do [[ -f "$file" ]] && [[ -x "$file" ]] || continue; rm -vi "$file"; done'
+alias rmexc='for file in ./*; do [[ -e "$file" ]] && [[ -x "$file" ]] || continue; rm -vi "$file"; done'
 alias cpv='cp -v'
 alias mvv='mv -v'
 alias dfh='df -Th'
 alias duh='du -hsc'
 
 # Aliases that require additional packages
-if [ -e /usr/bin/whereis ]; then
+if [[ -e /usr/bin/whereis ]]; then
     if [ $( whereis find ) != "find:" ]; then
         alias rm~='find -P . -type f -name "*~" -exec rm -vi '"'"'{}'"'"' \;'
     fi
@@ -89,21 +89,50 @@ function bashinfo() {
 function check_required_pkgs() {
     # Checks for required applications and prints results to stdout
     ts=$( date '+%Y-%m-%d %k:%M:%S' )
-    printf "%s Checking for required applications ...\\n" "$ts"
-    if [ -f /usr/bin/whereis ]; then
-        apps="find freecolor fuse-ext2 lynx most ntfs-3g rsync valgrind wget"
+    printf "%s Checking if required applications are present ...\\n" "$ts"
+    if [ -e /usr/bin/whereis ]; then
+        apps="find freecolor fuse-ext2 lynx most ntfs-3g ps rsync valgrind wget whereis xargs"
         for app in $apps; do
             result=$( whereis $app )
             ts=$( date '+%Y-%m-%d %k:%M:%S' )
             if [ "$result" != "$app"":" ]; then
-                printf "%s '%-10s' ... NOT INSTALLED\\n" "$ts" "$app"
+                printf "%s %-21s ... \e[0;31mNOT FOUND\e[0m\\n" "$ts" "$app"
             else
-                printf "%s '%-10s' ... INSTALLED\\n" "$ts" "$app"
+                printf "%s %-21s ... \e[0;32mFOUND\e[0m\\n" "$ts" "$app"
             fi
         done
     else
         ts=$( date '+%Y-%m-%d %k:%M:%S' )
-        printf "%s Can not find 'whereis' ... ABORTING!\\n" "$ts"
+        printf "%s %-21s ... \e[0;31mNOT FOUND\e[0m\\n" "$ts" "whereis"
+    fi
+
+    # Check if git completion and git prompt scripts are installed in the user
+    # home directory
+    printf "\\n"
+    ts=$( date '+%Y-%m-%d %k:%M:%S' )
+    printf "%s Checking if git completion and git prompt scripts are present ...\\n" "$ts"
+    ts=$( date '+%Y-%m-%d %k:%M:%S' )
+    if [[ -e ~/git-completion.bash ]]; then
+        printf "%s %-21s ... \e[0;32mFOUND\e[0m\\n" "$ts" "~/git-completion.bash"
+    else
+        printf "%s %-21s ... \e[0;31mNOT FOUND\e[0m\\n" "$ts" "~/git-completion.bash"
+    fi
+    ts=$( date '+%Y-%m-%d %k:%M:%S' )
+    if [[ -e ~/git-prompt.sh ]]; then
+        printf "%s %-21s ... \e[0;32mFOUND\e[0m\\n" "$ts" "~/git-prompt.sh"
+    else
+        printf "%s %-21s ... \e[0;31mNOT FOUND\e[0m\\n" "$ts" "~/git-prompt.sh"
+    fi
+
+    unset ts
+}
+
+
+# Function to kill process by giving the app name
+function killbyname() {
+    if [[ $( whereis ps ) != "ps:" && $( whereis xargs ) != "xargs:" ]]; then
+        # Kill proces by app name
+        ps -C "$1" | tail -n 1 | tr -s " " | cut -d " " -f 1 | xargs kill -9
     fi
 }
 
@@ -120,16 +149,30 @@ function welcome() {
     [ $( tty | egrep -i pts ) ] && clear
     printf "                    \e[0;31m%s\e[0m\\n" "$( uname -n )"
     printf "\\n"
-    printf "\e[0;32m            System:\e[0;31m %s\e[0m\\n" "$( uname -smr )"
+    if [[ "$os" == *Linux* ]]; then
+        printf "\e[0;32m            System:\e[0;31m %s\e[0m\\n" "$( uname -i )"
+    elif [[ "$os" == *BSD* ]]; then
+        printf "\e[0;32m            System:\e[0;31m %s\e[0m\\n" "$( uname -smr )"
+    elif [[ "$os" == *Msys* ]]; then
+        osn=$( systeminfo | grep -i "^OS Name" | tr -s " " | cut -d " " -f 3- )
+        osv=$( systeminfo | grep -i "^OS Version" | tr -s " " | cut -d " " -f 3- )
+        printf "\e[0;32m            System:\e[0;31m %s %s\e[0m\\n" "$osn" "$osv"
+        unset osn
+        unset osv
+    else
+        printf "\e[0;32m            System:\e[0;31m %s\e[0m\\n" "Unsupported system"
+    fi
     printf "\\n"
-    printf "\e[0;32mKernel Information:\e[0;31m %s\e[0m\\n" "$( uname -si )"
+    printf "\e[0;32mKernel Information:\e[0;31m %s\e[0m\\n" "$( uname -svr )"
     printf "\\n"
     bashinfo "$bshspcr"
     printf "\\n"
     if [[ "$os" == *Linux* || "$os" == *BSD* ]]; then
         printf "Uptime for this computer is %s\\n" "$( uptime )"
     else
-        printf "System boot time is %s\\n" "$( systeminfo | grep -i "System Boot Time" | tr -s " " | cut -d " " -f 4- )"
+        bt=$( systeminfo | grep -i "^System Boot Time" | tr -s " " | cut -d " " -f 4- )
+        printf "System boot time is %s\\n" "$bt"
+        unset bt
     fi
     printf "\\n"
     printf "\\n"
@@ -146,6 +189,7 @@ function welcome() {
     printf "\\n"
     unset bshspcr
     unset gccspcr
+    unset os
 }
 
 
@@ -173,9 +217,39 @@ set -o vi  # Set Vi as default text editing mode
 # Prompt options
 # ------------------------------------------------------------------------------
 
+# Give some color to prompt
+PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]\$\[\e[0m\] '
+
+# Enable Bash Git Prompt if git-prompt.sh is present
+if [[ -e ~/git-prompt.sh ]]; then
+    # Allow git prompt only in repos
+    GIT_PROMPT_ONLY_IN_REPO=1
+
+    # Source git prompt script
+    . ~/git-prompt.sh
+
+    # Add git prompt to existing prompt
+    PS1='\[\e[0;32m\][\[\e[0;36m\]\u\[\e[0m\]@\h \[\e[0;35m\]\W\[\e[0;32m]\]$(__git_ps1 " [%s]")\$\[\e[0m\] '
+fi
+
+# Source Bahs completion scripts if git-completion.bash is present
+if [[ -e ~/git-completion.bash ]]; then
+    . ~/git-completion.bash
+fi
+
+
+# ------------------------------------------------------------------------------
+# Man pages options
+# ------------------------------------------------------------------------------
+
+# Give some color to the manpages if all required packages are installed
+if [[ -e /usr/bin/whereis && $( whereis most ) != "most:" ]]; then
+    export MANPAGER="$( whereis most | cut -d " " -f2 )" "-s"
+fi
 
 # ------------------------------------------------------------------------------
 # Invoke welcome message
 # ------------------------------------------------------------------------------
-check_required_pkgs
 welcome
+
+# End of .bash_profile
